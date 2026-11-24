@@ -3,20 +3,13 @@ use std::ffi::c_void;
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 use windows::core::{s, w, PCSTR, PCWSTR};
 use windows::Win32::Foundation::{BOOL, FILETIME, HANDLE, HINSTANCE, HWND, INVALID_HANDLE_VALUE};
-use windows::Win32::Media::timeGetTime;
 use windows::Win32::System::LibraryLoader::{GetModuleHandleW, GetProcAddress, LoadLibraryW};
 use windows::Win32::System::Memory::{
     CreateFileMappingW, MapViewOfFile, FILE_MAP_ALL_ACCESS, PAGE_READWRITE,
 };
-use windows::Win32::System::Performance::QueryPerformanceCounter;
-use windows::Win32::System::SystemInformation::{
-    GetSystemTimeAsFileTime, GetSystemTimePreciseAsFileTime, GetTickCount, GetTickCount64,
-};
 use windows::Win32::System::SystemServices::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH};
-use windows::Win32::System::Threading::{
-    SetWaitableTimer, SetWaitableTimerEx, Sleep, PTIMERAPCROUTINE, REASON_CONTEXT,
-};
-use windows::Win32::UI::WindowsAndMessaging::{SetTimer, TIMERPROC};
+use windows::Win32::System::Threading::{PTIMERAPCROUTINE, REASON_CONTEXT};
+use windows::Win32::UI::WindowsAndMessaging::TIMERPROC;
 
 #[repr(C)]
 struct SharedState {
@@ -352,20 +345,6 @@ fn hook_export(module: PCWSTR, proc_name: PCSTR, detour: *mut c_void, slot: &Ato
 }
 
 fn setup_speedhack() -> Result<(), Box<dyn std::error::Error>> {
-    // Force linker to retain import symbols for crates
-    let _ = (
-        QueryPerformanceCounter as usize,
-        GetTickCount64 as usize,
-        GetTickCount as usize,
-        timeGetTime as usize,
-        GetSystemTimeAsFileTime as usize,
-        GetSystemTimePreciseAsFileTime as usize,
-        Sleep as usize,
-        SetTimer as usize,
-        SetWaitableTimer as usize,
-        SetWaitableTimerEx as usize,
-    );
-
     let size = std::mem::size_of::<SharedState>();
     // SAFETY: Maps shared memory created by UI or creates it if DLL loaded first.
     let view = unsafe {
