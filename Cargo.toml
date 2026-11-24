@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = [
+    "speed_daemon_dll",
+    "speed_daemon_ui",
+]
